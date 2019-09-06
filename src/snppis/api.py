@@ -4,10 +4,14 @@
 
 from typing import List
 
-import myvariant
 import pandas as pd
+from myvariant import MyVariantInfo
 
-mv = myvariant.MyVariantInfo()
+__all__ = [
+    'get_polyphen_scores',
+]
+
+mv = MyVariantInfo()
 
 
 def get_polyphen_scores(dbsnp_ids: List[str]) -> pd.DataFrame:
