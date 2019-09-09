@@ -2,32 +2,44 @@
 
 """Acquisition and exploration of SNP-related Bio2BEL packages."""
 
-from typing import List
+import itertools as itt
+from typing import Any, Iterable, Mapping
 
-import pandas as pd
 from myvariant import MyVariantInfo
 
 __all__ = [
-    'get_polyphen_scores',
+    'batched_query',
+    'query',
 ]
 
 mv = MyVariantInfo()
 
 
-def get_polyphen_scores(dbsnp_ids: List[str]) -> pd.DataFrame:
-    """Get polyphen2 scores for a list of SNPs."""
-    query = ' or '.join(
+def batched_query(dbsnp_ids: Iterable[str], n: int = 10) -> Iterable[Mapping[str, Any]]:
+    """Submit a batch query and iterate over the "hits" entries."""
+    assert n <= 10
+    for dbsnp_ids_chunk in _grouper(n, dbsnp_ids):
+        yield from query(dbsnp_ids_chunk)
+
+
+def _grouper(n, iterable):
+    it = iter(iterable)
+    while True:
+        chunk = tuple(itt.islice(it, n))
+        if not chunk:
+            return
+        yield chunk
+
+
+def query(dbsnp_ids: Iterable[str], as_dataframe: bool = False) -> Iterable[Mapping[str, Any]]:
+    """Query a set of SNPs by their dbSNP identifiers."""
+    q = ' or '.join(
         f'dbsnp.rsid:{dbsnp_id}'
         for dbsnp_id in dbsnp_ids
     )
-    df = mv.query(
-        query,
-        fields='dbsnp.rsid, dbnsfp.polyphen2.hdiv',
-        as_dataframe=True,
+    result = mv.query(
+        q,
+        fields='dbsnp.rsid, cadd.polyphen, cadd.sift, wellderly.polyphen',
+        as_dataframe=as_dataframe,
     )
-    df = df[['dbsnp.rsid', 'dbnsfp.polyphen2.hdiv.pred']].drop_duplicates()
-    df.rename(columns={
-        'dbsnp.rsid': 'dbsnp_id',
-        'dbnsfp.polyphen2.hdiv.pred': 'polyphen_prediction',
-    }, inplace=True)
-    return df
+    return result['hits']
