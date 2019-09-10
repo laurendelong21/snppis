@@ -8,24 +8,21 @@ import os
 import click
 
 from snppis.api import batched_query
-
-HERE = os.path.abspath(os.path.dirname(__file__))
-RESOURCES = os.path.join(HERE, 'mappings')
+from snppis.constants import DATABASES, RESOURCES
 
 
 @click.command()
 def main():
     """Generate scores for each pathway."""
-    for db in ('kegg', 'wikipathways', 'reactome'):
+    for db in DATABASES:
         lookup_predictions(db)
 
 
-def lookup_predictions(db):
-    """Look up the SNP from each pathway in MyVariant."""
+def load_pathway_to_snps(db):
     with open(os.path.join(RESOURCES, f'{db}.json')) as file:
         pathway_to_snp = json.load(file)
 
-    pathway_to_snp_keyed = {
+    return {
         (
             entry['pathway']['namespace'],
             entry['pathway']['identifier'],
@@ -36,9 +33,14 @@ def lookup_predictions(db):
         for entry in pathway_to_snp
     }
 
+
+def lookup_predictions(db):
+    """Look up the SNP from each pathway in MyVariant."""
+    pathway_to_snps = load_pathway_to_snps(db)
+
     dbsnp_ids = {
         snp
-        for pathway, snps in pathway_to_snp_keyed.items()
+        for pathway, snps in pathway_to_snps.items()
         for snp in snps
     }
 

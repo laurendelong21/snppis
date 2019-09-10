@@ -7,8 +7,7 @@ import os
 
 import click
 
-HERE = os.path.abspath(os.path.dirname(__file__))
-RESOURCES = os.path.join(HERE, 'mappings')
+from snppis.constants import DATABASES, RESOURCES
 
 POLYPHEN2_DAMAGING = {"damaging", "possibly damaging", "probably damaging"}
 SIFT_DAMAGING = {"deleterious", "deleterious - low confidence"}
@@ -17,7 +16,7 @@ SIFT_DAMAGING = {"deleterious", "deleterious - low confidence"}
 @click.command()
 def main():
     """Generate scores for each pathway."""
-    for db in ('kegg', 'wikipathways', 'reactome'):
+    for db in DATABASES:
         report_impactful(db)
 
 
@@ -28,21 +27,27 @@ def report_impactful(db: str):
 
     for entry in scores:
         dbsnp_id = entry['dbsnp']['rsid']
-        cadd = entry.get('cadd')
-        if cadd is None:
-            continue
-
-        polyphen = cadd.get('polyphen', {})
-        if isinstance(polyphen, list):
-            polyphen = polyphen[0]
-
-        sift = cadd.get('sift', {})
-        if isinstance(sift, list):
-            sift = sift[0]
-
-        impact = polyphen.get('cat') in POLYPHEN2_DAMAGING or sift.get('cat') in SIFT_DAMAGING
-
+        impact = check_impacted(entry)
         click.echo(f"{db}\t{dbsnp_id}\t{'⚠️' if impact else ''}")
+
+
+def check_impacted(entry) -> bool:
+    cadd = entry.get('cadd')
+    if cadd is None:
+        return False
+
+    polyphen = cadd.get('polyphen', {})
+    if isinstance(polyphen, list):
+        polyphen = polyphen[0]
+
+    sift = cadd.get('sift', {})
+    if isinstance(sift, list):
+        sift = sift[0]
+
+    return (
+        polyphen.get('cat') in POLYPHEN2_DAMAGING
+        or sift.get('cat') in SIFT_DAMAGING
+    )
 
 
 if __name__ == '__main__':

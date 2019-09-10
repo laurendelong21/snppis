@@ -7,17 +7,16 @@ import os
 from collections import defaultdict
 from typing import Mapping, Set
 
-import bio2bel_kegg
-import bio2bel_phewascatalog
-import bio2bel_reactome
-import bio2bel_wikipathways
 import click
 import pandas as pd
 from compath_utils import CompathManager
 from tqdm import tqdm
 
-HERE = os.path.abspath(os.path.dirname(__file__))
-RESOURCES = os.path.join(HERE, 'mappings')
+import bio2bel_kegg
+import bio2bel_phewascatalog
+import bio2bel_reactome
+import bio2bel_wikipathways
+from snppis.constants import RESOURCES
 
 
 @click.command()
