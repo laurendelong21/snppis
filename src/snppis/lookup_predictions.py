@@ -3,12 +3,16 @@
 """Look up the SNP from each pathway in MyVariant."""
 
 import json
+import logging
 import os
+from typing import List, Mapping, Tuple
 
 import click
 
 from snppis.api import batched_query
-from snppis.constants import DATABASES, RESOURCES
+from snppis.constants import DATABASES, MAPPINGS
+
+logger = logging.getLogger(__name__)
 
 
 @click.command()
@@ -18,10 +22,14 @@ def main():
         lookup_predictions(db)
 
 
-def load_pathway_to_snps(db):
-    with open(os.path.join(RESOURCES, f'{db}.json')) as file:
+def load_pathway_to_snps(db: str) -> Mapping[Tuple[str, str], List[str]]:
+    """Load mapping from pathway to SNPs for the given database."""
+    path = os.path.join(MAPPINGS, f'{db}.json')
+    logger.info(f'Loading {db} mappings from {path}')
+    with open(path) as file:
         pathway_to_snp = json.load(file)
 
+    logger.info(f'Reorganizing {db} mappings')
     return {
         (
             entry['pathway']['namespace'],
@@ -47,7 +55,7 @@ def lookup_predictions(db):
     click.echo(f'Got {len(dbsnp_ids)} SNPs from {db}')
 
     results = list(batched_query(dbsnp_ids))
-    path = os.path.join(RESOURCES, f'{db}_snp_scores.json')
+    path = os.path.join(MAPPINGS, f'{db}_snp_scores.json')
     with open(path, 'w') as file:
         json.dump(results, file, indent=2)
 

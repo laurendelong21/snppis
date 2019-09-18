@@ -7,16 +7,16 @@ import os
 from collections import defaultdict
 from typing import Mapping, Set
 
+import bio2bel_kegg
+import bio2bel_reactome
 import click
 import pandas as pd
 from compath_utils import CompathManager
 from tqdm import tqdm
 
-import bio2bel_kegg
 import bio2bel_phewascatalog
-import bio2bel_reactome
 import bio2bel_wikipathways
-from snppis.constants import RESOURCES
+from snppis.constants import MAPPINGS
 
 
 @click.command()
@@ -43,12 +43,12 @@ def main():
 
         click.echo(f'Writing pathway/snp mapping TSV for {manager.module_name}')
         pathway_to_snp_df = get_pathway_to_snp_df(pathway_to_snp, manager.module_name)
-        tsv_path = os.path.join(RESOURCES, f'{manager.module_name}.tsv')
+        tsv_path = os.path.join(MAPPINGS, f'{manager.module_name}.tsv')
         pathway_to_snp_df.to_csv(tsv_path, sep='\t', index=False)
 
         click.echo(f'Writing pathway/snp mapping JSON for {manager.module_name}')
         pathway_to_snp_json = get_pathway_to_snp_json(pathway_to_snp, manager.module_name)
-        json_path = os.path.join(RESOURCES, f'{manager.module_name}.json')
+        json_path = os.path.join(MAPPINGS, f'{manager.module_name}.json')
         with open(json_path, 'w') as file:
             json.dump(pathway_to_snp_json, file, indent=2)
 

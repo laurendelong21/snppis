@@ -7,7 +7,7 @@ import os
 
 import click
 
-from snppis.constants import DATABASES, RESOURCES
+from snppis.constants import DATABASES, MAPPINGS
 
 POLYPHEN2_DAMAGING = {"damaging", "possibly damaging", "probably damaging"}
 SIFT_DAMAGING = {"deleterious", "deleterious - low confidence"}
@@ -22,7 +22,7 @@ def main():
 
 def report_impactful(db: str):
     """Report the impactful SNPs in the given database."""
-    with open(os.path.join(RESOURCES, f'{db}_snp_scores.json')) as file:
+    with open(os.path.join(MAPPINGS, f'{db}_snp_scores.json')) as file:
         scores = json.load(file)
 
     for entry in scores:
@@ -32,6 +32,7 @@ def report_impactful(db: str):
 
 
 def check_impacted(entry) -> bool:
+    """Check if an entry from MyVariant has been reported as damaged in either PolyPhen2 or SIFT."""
     cadd = entry.get('cadd')
     if cadd is None:
         return False
