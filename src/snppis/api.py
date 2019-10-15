@@ -4,6 +4,7 @@
 
 import itertools as itt
 import json
+import logging
 import os
 from typing import Any, Iterable, Mapping
 
@@ -16,13 +17,16 @@ __all__ = [
     'query',
 ]
 
+logger = logging.getLogger(__name__)
 mv = MyVariantInfo()
 
 
 def batched_query(dbsnp_ids: Iterable[str], n: int = 10) -> Iterable[Mapping[str, Any]]:
     """Submit a batch query and iterate over the "hits" entries."""
     dbsnp_ids = list(dbsnp_ids)
+    logger.info(f'Querying {len(dbsnp_ids)} SNPs')
 
+    logger.info(f'Loading SNPs from cache at {MYVARIANT_CACHE}')
     uncached_dbsnp_ids = set()
     cache = {}
     for dbsnp_id in dbsnp_ids:
@@ -33,7 +37,10 @@ def batched_query(dbsnp_ids: Iterable[str], n: int = 10) -> Iterable[Mapping[str
         with open(cache_path) as file:
             cache[dbsnp_id] = json.load(file)
 
+    logger.info(f'Got {len(cache)} SNPs from cache at {MYVARIANT_CACHE}')
+
     assert n <= 10
+    logger.info(f'Querying {len(uncached_dbsnp_ids)} SNPs from MyVariant.info in groups of {n}')
     for dbsnp_ids_chunk in _grouper(n, uncached_dbsnp_ids):
         for result in query(dbsnp_ids_chunk):
             dbsnp_id = result['dbsnp']['rsid']
