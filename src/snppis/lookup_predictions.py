@@ -22,7 +22,7 @@ def main():
         lookup_predictions(db)
 
 
-def load_pathway_to_snps(db: str) -> Mapping[Tuple[str, str], List[str]]:
+def load_pathway_to_snps(db: str) -> Mapping[Tuple[str, str, str], List[str]]:
     """Load mapping from pathway to SNPs for the given database."""
     path = os.path.join(MAPPINGS, f'{db}.json')
     logger.info(f'Loading {db} mappings from {path}')
@@ -32,8 +32,9 @@ def load_pathway_to_snps(db: str) -> Mapping[Tuple[str, str], List[str]]:
     logger.info(f'Reorganizing {db} mappings')
     return {
         (
-            entry['pathway']['namespace'],
+            db,
             entry['pathway']['identifier'],
+            entry['pathway']['name'],
         ): [
             snp['identifier']
             for snp in entry['snps']

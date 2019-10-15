@@ -7,14 +7,14 @@ import os
 from collections import defaultdict
 from typing import Mapping, Set
 
-import bio2bel_kegg
-import bio2bel_reactome
 import click
 import pandas as pd
 from compath_utils import CompathManager
 from tqdm import tqdm
 
+import bio2bel_kegg
 import bio2bel_phewascatalog
+import bio2bel_reactome
 import bio2bel_wikipathways
 from snppis.constants import MAPPINGS
 

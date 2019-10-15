@@ -2,6 +2,8 @@ snppis
 ======
 A package for calculating SNP Pathway Impact Scores
 
+Pronounced "snip-pees", not "snip-piss"
+
 Installation
 ------------
 ``snppis`` can be installed from `GitHub <https://github.com/snp2k/snppis>`_ with:

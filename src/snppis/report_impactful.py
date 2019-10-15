@@ -45,10 +45,7 @@ def check_impacted(entry) -> bool:
     if isinstance(sift, list):
         sift = sift[0]
 
-    return (
-        polyphen.get('cat') in POLYPHEN2_DAMAGING
-        or sift.get('cat') in SIFT_DAMAGING
-    )
+    return polyphen.get('cat') in POLYPHEN2_DAMAGING or sift.get('cat') in SIFT_DAMAGING
 
 
 if __name__ == '__main__':

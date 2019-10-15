@@ -3,13 +3,13 @@
 """Command line interface for :mod:`snppis`."""
 
 import logging
-import sys
+import time
 from typing import TextIO
 
 import click
 import pandas as pd
 
-from .pipeline import get_pathway_to_patient_to_score
+from .pipeline import get_pathway_to_patient_to_score_df
 
 logger = logging.getLogger(__name__)
 
@@ -25,12 +25,15 @@ def main(file: TextIO, output: TextIO, sep: str, debug: bool):
     logging.basicConfig(level=level)
     logging.getLogger('snppis').setLevel(level)
 
-    click.secho(f'Loading data from {file.name}', fg='blue', err=True)
+    click.secho(f'Loading data from {file.name}', fg='yellow', bold=True)
+    t = time.time()
     df = pd.read_csv(file, sep=sep)
+    click.secho(f'Loaded data in {time.time() - t:.2f} seconds')
 
-    click.secho('Getting patient/pathway scores', fg='blue', err=True)
-    pathway_df = get_pathway_to_patient_to_score(df)
+    click.secho('Getting patient/pathway scores', fg='yellow', bold=True)
+    pathway_df = get_pathway_to_patient_to_score_df(df)
 
+    click.secho(f'Outputting patient/pathway scores to {output.name} ', fg='yellow', bold=True)
     pathway_df.to_csv(output, sep=sep, index=False)
 
 
