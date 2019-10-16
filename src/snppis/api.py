@@ -42,11 +42,15 @@ def batched_query(dbsnp_ids: Iterable[str], n: int = 10) -> Iterable[Mapping[str
     assert n <= 10
     logger.info(f'Querying {len(uncached_dbsnp_ids)} SNPs from MyVariant.info in groups of {n}')
     for dbsnp_ids_chunk in _grouper(n, uncached_dbsnp_ids):
-        for result in query(dbsnp_ids_chunk):
-            dbsnp_id = result['dbsnp']['rsid']
-            with open(os.path.join(MYVARIANT_CACHE, f'{dbsnp_id}.json'), 'w') as file:
-                json.dump(result, file, indent=2)
-            yield result
+        try:
+            for result in query(dbsnp_ids_chunk):
+                dbsnp_id = result['dbsnp']['rsid']
+                with open(os.path.join(MYVARIANT_CACHE, f'{dbsnp_id}.json'), 'w') as file:
+                    json.dump(result, file, indent=2)
+                yield result
+        except Exception:
+            logger.warning(f'Could not query {dbsnp_ids_chunk}')
+            continue
 
 
 def _grouper(n, iterable):
