@@ -3,6 +3,7 @@
 """Constants for :mod:`snppis`."""
 
 import os
+from typing import Tuple
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
@@ -20,3 +21,6 @@ DATABASES = [
     'wikipathways',
     'reactome',
 ]
+
+#: The database, identifier, and name of a pahtway
+PathwayTuple = Tuple[str, str, str]

@@ -5,12 +5,12 @@
 import json
 import logging
 import os
-from typing import List, Mapping, Tuple
+from typing import Mapping, Set
 
 import click
 
 from snppis.api import batched_query
-from snppis.constants import DATABASES, MAPPINGS
+from snppis.constants import DATABASES, MAPPINGS, PathwayTuple
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ def main():
         lookup_predictions(db)
 
 
-def load_pathway_to_snps(db: str) -> Mapping[Tuple[str, str, str], List[str]]:
+def load_pathway_to_snps(db: str) -> Mapping[PathwayTuple, Set[str]]:
     """Load mapping from pathway to SNPs for the given database."""
     path = os.path.join(MAPPINGS, f'{db}.json')
     logger.info(f'Loading {db} mappings from {path}')
@@ -35,19 +35,19 @@ def load_pathway_to_snps(db: str) -> Mapping[Tuple[str, str, str], List[str]]:
             db,
             entry['pathway']['identifier'],
             entry['pathway']['name'],
-        ): [
+        ): {
             snp['identifier']
             for snp in entry['snps']
-        ]
+        }
         for entry in pathway_to_snp
     }
 
 
-def lookup_predictions(db):
+def lookup_predictions(db: str):
     """Look up the SNP from each pathway in MyVariant."""
     pathway_to_snps = load_pathway_to_snps(db)
 
-    dbsnp_ids = {
+    dbsnp_ids: Set[str] = {
         snp
         for pathway, snps in pathway_to_snps.items()
         for snp in snps

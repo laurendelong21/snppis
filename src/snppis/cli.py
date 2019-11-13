@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 @click.command()
 @click.option('-f', '--file', type=click.File(), required=True)
-@click.option('-o', '--output', type=click.File('w'), required=True)
+@click.option('-o', '--output', type=click.Path(file_okay=False, dir_okay=True), required=True)
 @click.option('-s', '--sep', default=',')
 @click.option('-v', '--debug', is_flag=True)
 def main(file: TextIO, output: TextIO, sep: str, debug: bool):
@@ -31,10 +31,7 @@ def main(file: TextIO, output: TextIO, sep: str, debug: bool):
     click.secho(f'Loaded data in {time.time() - t:.2f} seconds')
 
     click.secho('Getting patient/pathway scores', fg='yellow', bold=True)
-    pathway_df = get_pathway_to_patient_to_score_df(df)
-
-    click.secho(f'Outputting patient/pathway scores to {output.name} ', fg='yellow', bold=True)
-    pathway_df.to_csv(output, sep=sep, index=False)
+    get_pathway_to_patient_to_score_df(df, output)
 
 
 if __name__ == '__main__':
