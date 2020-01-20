@@ -5,7 +5,7 @@
 import os
 from typing import Tuple
 
-HERE = os.path.abspath(os.path.dirname(__file__))
+HERE = os.path.abspath(os.path.dirname('/home/llong/Downloads'))
 
 RESOURCES = os.path.join(HERE, 'resources')
 os.makedirs(RESOURCES, exist_ok=True)

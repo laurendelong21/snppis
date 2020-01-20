@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""Map pathways to SNPs using PheWAS Catalog."""
+"""Map pathways to SNPs using dbSNP."""
 
 import json
 import os
@@ -13,20 +13,23 @@ from compath_utils import CompathManager
 from tqdm import tqdm
 
 import bio2bel_kegg
-import bio2bel_phewascatalog
 import bio2bel_reactome
 import bio2bel_wikipathways
 from snppis.constants import MAPPINGS
+
+#import urllib.request
+import json
+import bz2
+import itertools
+import time
 
 
 @click.command()
 def main():
     """Generate the mappings file in the resources directory."""
-    click.echo('Getting PheWAS Catalog data')
-    phewascatalog_df = get_phewascatalog_df()
 
-    click.echo('Getting gene to SNP mapping from PheWAS Catalog')
-    gene_to_snps = get_gene_to_snps(phewascatalog_df)
+    click.echo('Getting gene to SNP mapping from dbSNP')
+    gene_to_snps = make_snp_dict(gene_to_snps=defaultdict(set))
 
     managers = [
         bio2bel_kegg.Manager(),
@@ -53,20 +56,50 @@ def main():
             json.dump(pathway_to_snp_json, file, indent=2)
 
 
-def get_phewascatalog_df() -> pd.DataFrame:
-    """Get the PheWAS Catalog as a pandas DataFrame."""
-    phewascatalog_df = bio2bel_phewascatalog.parser.get_df()
-    phewascatalog_df = phewascatalog_df[phewascatalog_df.gene_name.notna()]
-    return phewascatalog_df
-
-
-def get_gene_to_snps(phewascatalog_df: pd.DataFrame) -> Mapping[str, Set[str]]:
+def make_snp_dict(gene_to_snps):
     """Get a mapping from gene to set of dbSNP identifiers."""
-    gene_to_snps = defaultdict(set)
-    for snp, gene_symbol in phewascatalog_df[['snp', 'gene_name']].values:
-        gene_to_snps[gene_symbol].add(snp)
+    chroms = list(range(1, 23)) + ['X', 'Y', 'MT']
+    for chrom in chroms:  
+        t0 = time.time()
+        # Here we begin the downloading of JSON files from the dbSNP database:
+        # this is not allowed on the Fraunhofer cluster
+    
+        #url = 'ftp://ftp.ncbi.nih.gov/snp/latest_release/JSON/refsnp-chr{}.json.bz2'.format(chrom)
+        path = '/home/llong/Downloads/refsnp/refsnp-chr{}.json.bz2'.format(chrom)
+        #if not os.path.exists(path):
+            #print('Beginning file download of chromosome {} with urllib2...'.format(chrom))
+            #urllib.request.urlretrieve(url, path)
+            #print('...Finished file download of chromosome {} with urllib2.'.format(chrom))
+    
+    
+        # Here we parse through the files:
+        print('Now decompressing and reading JSON.bz2 files from chromosome {} with *bz2* and *json* ...'.format(chrom))
+        with bz2.BZ2File(path, 'rb') as f_in:
+            for line in f_in:
+                rs_obj = json.loads(line.decode('utf-8'))
+                dbsnp_id = 'rs' + rs_obj['refsnp_id']  # the dbsnp id
+    
+                all_ann_list_raw = rs_obj['primary_snapshot_data'][
+                    'allele_annotations']  # these are the assembly annotations
+    
+                if len(all_ann_list_raw) >= 2:  # if it has sufficient info
+                    assembl_ann_list_raw = all_ann_list_raw[1]['assembly_annotation']  # against each assembly
+                    if len(assembl_ann_list_raw) != 0:  # if it contains gene info
+                        gene_list_raw = assembl_ann_list_raw[0][
+                            'genes']  # and each of the genes affected within each assembly
+                        if len(gene_list_raw) > 0:
+                            # Here I start extracting gene info:
+                            for x, y, z in itertools.product(range(len(all_ann_list_raw)),
+                                                             range(len(assembl_ann_list_raw)),
+                                                             range(len(gene_list_raw))):
+                                symbol = all_ann_list_raw[x]['assembly_annotation'][y]['genes'][z]['locus']
+    
+                                gene_to_snps[symbol].add(dbsnp_id)
+        t1 = time.time()
+        totaltime = t1 - t0
+        print("Finished writing gene:snp pairs from chromosome {} to the dictionary in {} seconds.".format(chrom, totaltime))
+   
     return dict(gene_to_snps)
-
 
 def get_pathway_to_gene(manager: CompathManager):
     """Get a pathway to set of HGNC gene symbol mapping."""
