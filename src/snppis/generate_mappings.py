@@ -15,7 +15,7 @@ from tqdm import tqdm
 import bio2bel_kegg
 import bio2bel_reactome
 import bio2bel_wikipathways
-from snppis.constants import MAPPINGS
+from snppis.constants import MAPPINGS, REFSNP
 
 #import urllib.request
 import json
@@ -59,18 +59,17 @@ def main():
 def make_snp_dict(gene_to_snps):
     """Get a mapping from gene to set of dbSNP identifiers."""
     chroms = list(range(1, 23)) + ['X', 'Y', 'MT']
-    for chrom in chroms:  
+    for chrom in chroms:
         t0 = time.time()
         # Here we begin the downloading of JSON files from the dbSNP database:
         # this is not allowed on the Fraunhofer cluster
-    
+
         #url = 'ftp://ftp.ncbi.nih.gov/snp/latest_release/JSON/refsnp-chr{}.json.bz2'.format(chrom)
-        path = '/home/llong/Downloads/refsnp/refsnp-chr{}.json.bz2'.format(chrom)
+        path = os.path.join(REFSNP, 'refsnp-chr{}.json.bz2'.format(chrom))
         #if not os.path.exists(path):
             #print('Beginning file download of chromosome {} with urllib2...'.format(chrom))
             #urllib.request.urlretrieve(url, path)
             #print('...Finished file download of chromosome {} with urllib2.'.format(chrom))
-    
     
         # Here we parse through the files:
         print('Now decompressing and reading JSON.bz2 files from chromosome {} with *bz2* and *json* ...'.format(chrom))
