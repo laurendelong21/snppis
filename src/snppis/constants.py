@@ -5,7 +5,9 @@
 import os
 from typing import Tuple
 
-HERE = os.path.abspath(os.path.dirname('/home/.snppis'))
+HOME = os.environ['HOME']
+
+HERE = os.path.join(HOME, '.snppis')
 os.makedirs(HERE, exist_ok=True)
 
 REFSNP = os.path.join(HERE, 'refsnp')
